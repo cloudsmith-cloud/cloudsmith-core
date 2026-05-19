@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\cloudsmith-sdk\src\CloudSmith.Sdk\CloudSmith.Sdk.csproj" />
+    <PackageReference Include="CloudSmith.Sdk" Version="0.1.0" />
   </ItemGroup>
 
 </Project>
