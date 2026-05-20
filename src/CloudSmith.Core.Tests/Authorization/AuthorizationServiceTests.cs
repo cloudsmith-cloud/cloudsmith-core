@@ -63,8 +63,7 @@ public sealed class AuthorizationServiceTests : IAsyncLifetime
     public async Task OrgAdmin_HasClusterWrite_InOwnOrg()
     {
         var svc = new PostgresAuthorizationService(_db, NullLogger<PostgresAuthorizationService>.Instance);
-        var ctx = new AuthorizationContext(AliceId, OrgAId, null, null);
-        var result = await svc.HasPermissionAsync(ctx, "cluster:write");
+        var result = await svc.AuthorizeAsync(OrgAId.ToString(), AliceId.ToString(), "cluster:write", null, CancellationToken.None);
         Assert.True(result);
     }
 
@@ -73,8 +72,7 @@ public sealed class AuthorizationServiceTests : IAsyncLifetime
     {
         var svc = new PostgresAuthorizationService(_db, NullLogger<PostgresAuthorizationService>.Instance);
         // Alice has OrgAdmin in OrgA but is being checked against OrgB — tenant isolation
-        var ctx = new AuthorizationContext(AliceId, OrgBId, null, null);
-        var result = await svc.HasPermissionAsync(ctx, "cluster:write");
+        var result = await svc.AuthorizeAsync(OrgBId.ToString(), AliceId.ToString(), "cluster:write", null, CancellationToken.None);
         Assert.False(result);
     }
 
@@ -82,8 +80,7 @@ public sealed class AuthorizationServiceTests : IAsyncLifetime
     public async Task UserWithNoRole_HasNoPermissions()
     {
         var svc = new PostgresAuthorizationService(_db, NullLogger<PostgresAuthorizationService>.Instance);
-        var ctx = new AuthorizationContext(BobId, OrgBId, null, null);
-        var result = await svc.HasPermissionAsync(ctx, "cluster:read");
+        var result = await svc.AuthorizeAsync(OrgBId.ToString(), BobId.ToString(), "cluster:read", null, CancellationToken.None);
         Assert.False(result);
     }
 }
