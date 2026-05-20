@@ -22,12 +22,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
           source-url: https://nuget.pkg.github.com/cloudsmith-cloud/index.json
         env:
-          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUGET_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
       - run: dotnet restore
       - run: dotnet build --no-restore -c Release
       - run: dotnet test --no-build -c Release --filter "Category!=Integration"
@@ -40,15 +46,21 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
           source-url: https://nuget.pkg.github.com/cloudsmith-cloud/index.json
         env:
-          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUGET_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
       - run: dotnet build -c Release
       - run: dotnet pack -c Release -p:Version=${{ needs.validate-tag.outputs.version }} --no-build -o ./nupkg
-      - run: dotnet nuget push ./nupkg/*.nupkg --source https://nuget.pkg.github.com/cloudsmith-cloud/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+      - run: dotnet nuget push ./nupkg/*.nupkg --source https://nuget.pkg.github.com/cloudsmith-cloud/index.json --api-key ${{ steps.app-token.outputs.token }} --skip-duplicate
 
   github-release:
     needs: pack-publish
