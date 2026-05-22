@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>CloudSmith.Core</RootNamespace>
     <AssemblyName>CloudSmith.Core</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <PackageId>CloudSmith.Core</PackageId>
     <Authors>CloudSmith Contributors</Authors>
     <Description>Platform kernel for CloudSmith — MLM runtime, RBAC engine, PostgreSQL schema, event bus, and health endpoints.</Description>
