@@ -33,6 +33,9 @@ public static class CoreKernelExtensions
         services.AddScoped<ICloudSmithAuthorizationService, PostgresAuthorizationService>();
         services.AddScoped<ICloudSmithConfigService, PostgresConfigService>();
 
+        // ADR-047 first-run setup + local (break-glass) authentication
+        services.AddScoped<Setup.SetupService>();
+
         // FluentMigrator
         services
             .AddFluentMigratorCore()
