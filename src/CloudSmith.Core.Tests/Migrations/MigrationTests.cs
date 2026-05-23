@@ -36,7 +36,7 @@ public sealed class MigrationTests : IAsyncLifetime
         {
             "core.orgs", "core.users", "core.role_definitions", "core.role_permissions",
             "core.role_assignments", "core.module_registry", "core.sites", "core.runner_registry",
-            "core.jobs", "core.audit_log", "core.notifications", "core.secrets_references",
+            "core.jobs", "core.audit_log", "core.notifications", "core.secret_refs",
             "config.scopes", "config.variable_schema", "config.variable_values",
             "config.variable_history", "config.resources", "config.deployment_snapshots",
             "config.drift_findings", "config.stale_findings", "config.scope_group_activation"
