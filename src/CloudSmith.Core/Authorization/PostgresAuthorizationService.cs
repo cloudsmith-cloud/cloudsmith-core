@@ -28,12 +28,13 @@ public sealed class PostgresAuthorizationService : ICloudSmithAuthorizationServi
     {
         await using var conn = await _db.OpenConnectionAsync(ct);
 
-        // Set org_id session variable for RLS enforcement
+        // Set org_id session variable for RLS enforcement.
+        // PostgreSQL SET LOCAL does not support parameterized values ($1); use set_config() instead.
         await using (var setOrg = conn.CreateCommand())
         {
-            setOrg.CommandText = "SET LOCAL app.current_org_id = @orgId;";
-            setOrg.Parameters.AddWithValue("orgId", Guid.Parse(orgId));
-            await setOrg.ExecuteNonQueryAsync(ct);
+            setOrg.CommandText = "SELECT set_config('app.current_org_id', @orgId, true);";
+            setOrg.Parameters.AddWithValue("orgId", orgId);
+            await setOrg.ExecuteScalarAsync(ct);
         }
 
         await using var cmd = conn.CreateCommand();
