@@ -4,6 +4,7 @@
 using CloudSmith.Sdk.Config;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace CloudSmith.Core.Config;
 
@@ -149,7 +150,7 @@ public sealed class PostgresConfigService : ICloudSmithConfigService
               AND (@module IS NULL OR owning_module = @module)
             ORDER BY owning_module, key
             """;
-        cmd.Parameters.AddWithValue("module", (object?)owningModule ?? DBNull.Value);
+        cmd.Parameters.Add(new NpgsqlParameter("module", NpgsqlDbType.Text) { Value = (object?)owningModule ?? DBNull.Value });
 
         var results = new List<ConfigVariable>();
         await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
