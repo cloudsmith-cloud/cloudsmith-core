@@ -5,6 +5,7 @@ using CloudSmith.Core.Authorization;
 using CloudSmith.Core.Config;
 using CloudSmith.Core.Events;
 using CloudSmith.Core.Health;
+using CloudSmith.Core.Jobs;
 using CloudSmith.Core.Migrations;
 using CloudSmith.Sdk.Authorization;
 using CloudSmith.Sdk.Config;
@@ -42,6 +43,9 @@ public static class CoreKernelExtensions
 
         // ADR-047 first-run setup + local (break-glass) authentication
         services.AddScoped<Setup.SetupService>();
+
+        // Job service — persists and queries async platform jobs (AB#1429)
+        services.AddScoped<IJobService, PostgresJobService>();
 
         // FluentMigrator
         services
