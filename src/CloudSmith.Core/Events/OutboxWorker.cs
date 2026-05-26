@@ -190,8 +190,16 @@ public sealed class OutboxWorker : BackgroundService
 /// <summary>
 /// Generic envelope published via <see cref="InProcessEventBus"/> for all outbox events.
 /// Subscribers that need the concrete type should deserialize <see cref="Payload"/> themselves.
+/// OccurredAt reflects delivery time (not original event creation time).
+/// SourceModuleId is "core.outbox" — the outbox worker is the re-publisher.
+/// OrgId is null for the generic envelope; org context is in the Payload JSON if applicable.
 /// </summary>
 public sealed record OutboxEventEnvelope(
     Guid EventId,
     string EventType,
-    string Payload) : ICloudSmithEvent;
+    string Payload) : ICloudSmithEvent
+{
+    public DateTimeOffset OccurredAt    { get; } = DateTimeOffset.UtcNow;
+    public string         SourceModuleId { get; } = "core.outbox";
+    public string?        OrgId          { get; } = null;
+}
