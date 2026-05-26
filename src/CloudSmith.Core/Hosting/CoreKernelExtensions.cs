@@ -29,9 +29,16 @@ public static class CoreKernelExtensions
         services.AddSingleton(dataSource);
 
         // Platform services
-        services.AddSingleton<IPlatformEventBus, InProcessEventBus>();
+        // InProcessEventBus is registered as both Singleton and IPlatformEventBus so
+        // OutboxWorker can depend on the concrete type for direct publish calls.
+        services.AddSingleton<InProcessEventBus>();
+        services.AddSingleton<IPlatformEventBus>(sp => sp.GetRequiredService<InProcessEventBus>());
         services.AddScoped<ICloudSmithAuthorizationService, PostgresAuthorizationService>();
         services.AddScoped<ICloudSmithConfigService, PostgresConfigService>();
+
+        // Event outbox — durable at-least-once event delivery (AB#1425).
+        services.AddSingleton<OutboxPublisher>();
+        services.AddHostedService<OutboxWorker>();
 
         // ADR-047 first-run setup + local (break-glass) authentication
         services.AddScoped<Setup.SetupService>();
