@@ -37,10 +37,10 @@ public interface ISubstrateAdapter
 
     /// <summary>
     /// Writes an operator-facing artifact to the substrate's canonical location.
-    /// PaaS: Secret → KV secret; Diagnostic → App Insights event; Receipt → KV tagged secret.
+    /// PaaS: Secret → KV secret (with optional TTL); Diagnostic → App Insights event; Receipt → KV tagged secret.
     /// On-prem: Secret → restricted file; Diagnostic → Loki; Receipt → /var/lib/cloudsmith/receipts/.
     /// </summary>
-    Task WriteOperatorArtifactAsync(string logicalName, string content, ArtifactKind kind, CancellationToken ct = default);
+    Task WriteOperatorArtifactAsync(string logicalName, string content, ArtifactKind kind, DateTimeOffset? expiresOn = null, CancellationToken ct = default);
 
     /// <summary>
     /// Returns the substrate-specific CLI command or file path an operator uses to
