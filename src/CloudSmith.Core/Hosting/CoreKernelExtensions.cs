@@ -13,6 +13,7 @@ using CloudSmith.Sdk.Events;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace CloudSmith.Core.Hosting;
@@ -65,12 +66,34 @@ public static class CoreKernelExtensions
     }
 
     /// <summary>
-    /// Runs all pending FluentMigrator migrations. Call after app.Build() and before app.Run().
+    /// Runs all pending FluentMigrator migrations with retry-with-backoff.
+    /// Retries up to 10 times (90 s total) before crashing — gives PG time to
+    /// become reachable when ACA and PG cold-start at the same time.
     /// </summary>
     public static void MigrateCloudSmithDatabase(this IServiceProvider services)
     {
-        using var scope = services.CreateScope();
-        var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
-        runner.MigrateUp();
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("CloudSmith.Migrations");
+        const int maxAttempts = 10;
+        var delays = new[] { 2, 3, 5, 8, 10, 10, 10, 15, 15, 15 };
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                using var scope = services.CreateScope();
+                scope.ServiceProvider.GetRequiredService<IMigrationRunner>().MigrateUp();
+                return;
+            }
+            catch (Exception ex) when (attempt < maxAttempts)
+            {
+                var delay = delays[attempt - 1];
+                logger.LogWarning(ex, "Database migration attempt {Attempt}/{Max} failed — retrying in {Delay}s", attempt, maxAttempts, delay);
+                Thread.Sleep(TimeSpan.FromSeconds(delay));
+            }
+        }
+
+        // Final attempt — let it throw so the container exits with a non-zero code
+        using var finalScope = services.CreateScope();
+        finalScope.ServiceProvider.GetRequiredService<IMigrationRunner>().MigrateUp();
     }
 }
