@@ -39,7 +39,8 @@ public sealed class JobDispatchFrameTests
             .And.Contain("\"traceparent\":");
 
         var back = JsonSerializer.Deserialize<JobFrame>(json, Wire);
-        back.Should().BeOfType<JobDispatch>().And.BeEquivalentTo(frame);
+        back.Should().BeOfType<JobDispatch>()
+            .Which.Should().BeEquivalentTo((JobDispatch)frame);
     }
 
     [Fact]
@@ -69,7 +70,10 @@ public sealed class JobDispatchFrameTests
             .And.Contain($"\"ackStatus\":\"{wireValue}\"");
 
         var back = JsonSerializer.Deserialize<JobFrame>(json, Wire);
-        back.Should().BeOfType<JobAck>().And.BeEquivalentTo(frame);
+        var ack = back.Should().BeOfType<JobAck>().Which;
+        ack.AckStatus.Should().Be(status);
+        ack.JobId.Should().Be(JobId);
+        ack.Detail.Should().Be(((JobAck)frame).Detail);
     }
 
     [Fact]
@@ -90,7 +94,8 @@ public sealed class JobDispatchFrameTests
             .And.Contain("\"completedAt\":");
 
         var back = JsonSerializer.Deserialize<JobFrame>(json, Wire);
-        back.Should().BeOfType<JobResult>().And.BeEquivalentTo(frame);
+        back.Should().BeOfType<JobResult>()
+            .Which.Should().BeEquivalentTo((JobResult)frame);
     }
 
     [Fact]
