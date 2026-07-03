@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.9] - 2026-07-03
+
+### Added
+
+- Canonical job dispatch contract: `JobDispatch`, `JobAck`, and `JobResult` frames (AB#4839).
+- `JobStateMachine` with the legal-transition table for job lifecycle states (AB#4839).
+- `core.jobs` migration adding `idempotency_key`, `site_id`, `env NOT NULL DEFAULT 'default'`, `attempt_count`, and `timeout_at` columns (AB#4839).
+- Idempotent job persistence operations: `CreateJobAsync`, `TryTransitionAsync`, and `RecordResultAsync` (AB#4839).
+
 ## [0.5.0] - 2026-05-23
 
 ### Added
