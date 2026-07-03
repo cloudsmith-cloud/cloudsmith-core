@@ -53,7 +53,8 @@ public sealed class PostgresJobService : IJobService
             cmd.Parameters.AddWithValue("@created_by", request.CreatedByUserId);
             cmd.Parameters.AddWithValue("@idempotency_key", (object?)request.IdempotencyKey ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@site_id",   (object?)request.SiteId ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@env",       (object?)request.Env ?? DBNull.Value);
+            // Contract §3: core.jobs.env is NOT NULL DEFAULT 'default' — never write NULL.
+            cmd.Parameters.AddWithValue("@env",       JobEnvironments.Normalize(request.Env));
             cmd.Parameters.AddWithValue("@timeout_at",(object?)request.TimeoutAt ?? DBNull.Value);
 
             await using var reader = await cmd.ExecuteReaderAsync(ct);

@@ -9,8 +9,9 @@ namespace CloudSmith.Core.Migrations;
 /// Adds the Wave 1 canonical job dispatch columns to core.jobs per the frozen
 /// contract (cloudsmith-internal design/api-surface/job-dispatch-contract.md §3, AB#4839):
 /// idempotency_key (client dedupe, unique per org), site_id + env ((site_id, env)
-/// relay routing scope), attempt_count (incremented on every → dispatched transition),
-/// and timeout_at (absolute deadline for the API-side timeout watchdog).
+/// relay routing scope; env is NOT NULL DEFAULT 'default' per §3), attempt_count
+/// (incremented on every → dispatched transition), and timeout_at (absolute deadline
+/// for the API-side timeout watchdog).
 /// </summary>
 [Migration(20260703001)]
 public sealed class M20260703001_AddJobDispatchColumns : Migration
@@ -21,7 +22,7 @@ public sealed class M20260703001_AddJobDispatchColumns : Migration
             ALTER TABLE core.jobs
                 ADD COLUMN IF NOT EXISTS idempotency_key text,
                 ADD COLUMN IF NOT EXISTS site_id         uuid REFERENCES core.sites (site_id) ON DELETE SET NULL,
-                ADD COLUMN IF NOT EXISTS env             text,
+                ADD COLUMN IF NOT EXISTS env             text NOT NULL DEFAULT 'default',
                 ADD COLUMN IF NOT EXISTS attempt_count   int  NOT NULL DEFAULT 0,
                 ADD COLUMN IF NOT EXISTS timeout_at      timestamptz;
 
@@ -31,10 +32,11 @@ public sealed class M20260703001_AddJobDispatchColumns : Migration
                 ON core.jobs (org_id, idempotency_key)
                 WHERE idempotency_key IS NOT NULL;
 
-            -- Contract §5: (site_id, env) routing — dispatch loop selects queued
-            -- jobs by strict site/env equality with a connected relay.
-            CREATE INDEX IF NOT EXISTS ix_jobs_site_id_env
-                ON core.jobs (site_id, env)
+            -- Contract §3 + §5: (org_id, site_id, env) routing — dispatch loop selects
+            -- queued jobs by strict site/env equality with a connected relay. Jobs with
+            -- site_id IS NULL are never routable (§5), so the index excludes them.
+            CREATE INDEX IF NOT EXISTS ix_jobs_org_id_site_id_env
+                ON core.jobs (org_id, site_id, env)
                 WHERE site_id IS NOT NULL;
 
             -- Contract §6.1: timeout watchdog sweep over non-terminal jobs.
